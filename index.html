@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Plog</title>
+    <link rel="stylesheet" href="main.css">
+
+    <script>
+        function onSubmit() {
+            const urlParams = new URLSearchParams(window.location.href);
+            const service = urlParams.get('service');
+            const key = urlParams.get('key');
+            const user = urlParams.get('user');
+
+            const status = document.querySelector('.status').innerText;
+            const opts = {
+                TableName: user,
+                Item: {
+                    user: user,
+                    status: status,
+                    timestamp: Date.now()
+                }
+            };
+
+            if (status !== '')  {
+                fetch(`https://${service}?key=${key}&user=${user}`, {
+                    method: 'POST',
+                    body: JSON.stringify(opts)
+                }).then(function(response) {
+                    return response.json();
+                }).then(function(data) {
+                    document.querySelector('.bottom').classList.add('posted');
+                    let meta = '';
+                    for ( let key in data.parsed.Item) {
+                        switch (key) {
+                            case 'timestamp':
+                                meta += `<span class="meta-item">${new Date(data.parsed.Item[key]).toLocaleTimeString()}</span>`;
+                                break;
+
+                            case 'status':
+                                break;
+
+                            default:
+                                meta += `<span class="meta-item">${key}: ${data.parsed.Item[key]}</span>`;
+                        }
+                    }
+                    document.querySelector('.bottom').innerHTML = meta;
+                });
+            }
+
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div contenteditable="true" class="status"></div>
+        <div class="bottom">
+            <button onclick="onSubmit()">Log</button>
+        </div>
+    </div>
+</body>
+</html>
